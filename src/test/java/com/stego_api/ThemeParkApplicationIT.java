@@ -1,4 +1,4 @@
-package com.tomgregory;
+package com.stego_api;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

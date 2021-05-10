@@ -14,7 +14,14 @@ sourceCompatibility = 11
 repositories {
     mavenCentral()
     jcenter()
+    //maven {
+    //    url "http://download.osgeo.org/webdav/geotools/"
+    //}
+    //maven { url "http://repo.boundlessgeo.com/main" }
+    //maven { url "http://repo.opengeo.org" }
 }
+
+
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -22,8 +29,20 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-devtools'
-    implementation group: 'com.h2database', name: 'h2', version: '1.4.200'
+    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation group: 'org.geolatte', name: 'geolatte-geojson', version: '1.8.0'
+    implementation group: 'org.geolatte', name: 'geolatte-geom', version: '1.8.0'
+    implementation 'mil.nga.sf:sf-geojson:2.0.5'
+    implementation 'com.github.filosganga:geogson-core:1.4.2'
 
+    //implementation 'org.geotools:gt-shapefile:25.0'
+
+
+    implementation group: 'com.h2database', name: 'h2', version: '1.4.200'
+    implementation group: 'org.opengis', name: 'geoapi', version: '3.0.1'
+//   implementation group: 'org.geotools', name: 'gt-shapefile', version: '25.0'
+
+    compile 'com.google.code.gson:gson:2.+'
     compileOnly 'org.projectlombok:lombok:1.18.12'
     annotationProcessor 'org.projectlombok:lombok:1.18.12'
 
@@ -46,11 +65,11 @@ docker {
 dockerRun {
     name project.name
     image imageName
-    ports '8080:8080'
+    ports '8081:8081'
     clean true
 }
 
-import com.amazonaws.services.cloudformation.model.Capability
+//import com.amazonaws.services.cloudformation.model.Capability
 
 aws {
     region = findProperty('region') ?: 'us-east-1'

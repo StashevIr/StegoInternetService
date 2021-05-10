@@ -1,16 +1,16 @@
-package com.tomgregory;
+package com.stego_api;
 
-import com.tomgregory.entity.ThemeParkRide;
-import com.tomgregory.repository.ThemeParkRideRepository;
+import com.stego_api.entity.ThemeParkRide;
+import com.stego_api.repository.ThemeParkRideRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 
 @SpringBootApplication
-public class ThemeParkApplication  {
+public class StegoAPI {
     public static void main(String[] args) {
-        SpringApplication.run(ThemeParkApplication.class);
+        SpringApplication.run( StegoAPI.class);
     }
 
     @Bean

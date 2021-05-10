@@ -1,6 +1,6 @@
-package com.tomgregory.repository;
+package com.stego_api.repository;
 
-import com.tomgregory.entity.ThemeParkRide;
+import com.stego_api.entity.ThemeParkRide;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
