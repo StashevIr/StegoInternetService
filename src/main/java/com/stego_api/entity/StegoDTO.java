@@ -8,6 +8,8 @@ package com.stego_api.entity;
 public class StegoDTO{
     public String fileContent;
     public String message;
+    public String owner;
+    public String id;
 
 //    public StegoDTO(String fileContent, String message) {
 //        this.fileContent = fileContent;

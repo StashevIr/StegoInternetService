@@ -14,6 +14,7 @@ sourceCompatibility = 11
 repositories {
     mavenCentral()
     jcenter()
+    google()
     //maven {
     //    url "http://download.osgeo.org/webdav/geotools/"
     //}
@@ -34,7 +35,7 @@ dependencies {
     implementation group: 'org.geolatte', name: 'geolatte-geom', version: '1.8.0'
     implementation 'mil.nga.sf:sf-geojson:2.0.5'
     implementation 'com.github.filosganga:geogson-core:1.4.2'
-
+    implementation 'com.mapbox.mapboxsdk:mapbox-sdk-geojson:5.8.0'
     //implementation 'org.geotools:gt-shapefile:25.0'
 
 

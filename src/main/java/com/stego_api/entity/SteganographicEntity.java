@@ -14,7 +14,7 @@ import javax.validation.constraints.NotEmpty;
 @Getter
 @ToString
 @NoArgsConstructor
-public class ThemeParkRide {
+public class SteganographicEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
@@ -25,7 +25,7 @@ public class ThemeParkRide {
     private int thrillFactor;
     private int vomitFactor;
 
-    public ThemeParkRide ( String name , String description , int thrillFactor , int vomitFactor ) {
+    public SteganographicEntity(String name , String description , int thrillFactor , int vomitFactor ) {
         this.name = name;
         this.description = description;
         this.thrillFactor = thrillFactor;
