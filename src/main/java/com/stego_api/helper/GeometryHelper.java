@@ -1,6 +1,6 @@
 package com.stego_api.helper;
 
-import com.mapbox.geojson.Feature;
+import com.google.gson.JsonObject;
 import com.mapbox.geojson.Point;
 import com.mapbox.geojson.Polygon;
 
@@ -13,7 +13,8 @@ import java.util.stream.IntStream;
 
 public class GeometryHelper {
 
-    public static String typePolygon = "Polygon";
+    public static String polygonType = "Polygon";
+    public static String multiPolygonType = "MultiPolygon";
 
     public static final int COUNT_OF_EDGE = 31;
     public static final int COUNT_OF_PIECE = 16;
@@ -40,11 +41,9 @@ public class GeometryHelper {
     }
 
     public static int[] getEdgesByHash(String hash) {
-        //int[] edges = new int[hash.length()];
         int[] edges = new int[COUNT_OF_EDGE];
         int[] decHash = HashUtil.getDecimalHashArray(hash);
         edges[0] = decHash[0];
-
         for (int i = 1; i < edges.length; i++) {
             edges[i] = edges[i - 1] + decHash[i] + 1; // Add 1 to avoid double index in case of 0 value of hash
         }
@@ -191,16 +190,15 @@ public class GeometryHelper {
         }
     }
 
-    public static int[] embedToPolygon(Feature currentFeature, boolean isFirst, int[] edgesByHash, int[] previousCoefficients) throws NoSuchAlgorithmException {
-        String hashOfProperties = HashUtil.getHash(currentFeature.properties().toString());
+    public static int[] embedToPolygon(Polygon polygon, int polygonIndex, JsonObject properties, int[] edgesByHash, List<int[]> previousCoefficients) throws NoSuchAlgorithmException {
+        String hashOfProperties = HashUtil.getHash(properties.toString());
         int[] coefficients = HashUtil.getDecimalHashArray(hashOfProperties);
 
-        Polygon polygon = (Polygon) currentFeature.geometry();
         List<Point> coordinates = polygon.coordinates().get(0);
 
         int size = coordinates.size(); // need to know count of coordinates before changes
-        if (!isFirst) {
-            GeometryHelper.embedCommonHash(coordinates, previousCoefficients, edgesByHash);
+        if (polygonIndex != 0) {
+            GeometryHelper.embedCommonHash(coordinates, previousCoefficients.get(polygonIndex - 1), edgesByHash);
         }
         int[] randomEdges = GeometryHelper.getRandomEdges(size, edgesByHash);
         GeometryHelper.embedPropertyHash(coordinates, coefficients, randomEdges);

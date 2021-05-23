@@ -1,9 +1,22 @@
 package com.stego_api.helper;
 
+import com.mapbox.geojson.FeatureCollection;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JsonSerializationHelper {
+
+    // Standard Mapbox .toJson loses precision that why new parser is written.
+    // Coordinates with precision loss (.toJson) are replaced by coordinates from object FeatureCollection (.toString).
+    // Due to some limitations of Matcher it is needed to do this operation twice: from the begin and from the end.
+    public static String toGeoJSON(FeatureCollection featureCollection) {
+        String firstPart = JsonSerializationHelper.replaceCoordinatesInJSON(featureCollection.toJson(), featureCollection.toString());
+        String secondPart = JsonSerializationHelper.replaceCoordinatesInJSON(new StringBuilder(firstPart).reverse().toString(), new StringBuilder(featureCollection.toString()).reverse().toString());
+        String map = new StringBuilder(secondPart).reverse().toString();
+        return map;
+    }
+
     public static String replaceCoordinatesInJSON(String to, String from) {
         //builders to efficiently change jsons
         StringBuilder toBuilder = new StringBuilder(to);

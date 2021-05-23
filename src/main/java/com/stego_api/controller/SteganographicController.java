@@ -4,10 +4,7 @@ package com.stego_api.controller;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.mapbox.geojson.Feature;
-import com.mapbox.geojson.FeatureCollection;
-import com.mapbox.geojson.Point;
-import com.mapbox.geojson.Polygon;
+import com.mapbox.geojson.*;
 import com.stego_api.entity.StegoDTO;
 import com.stego_api.helper.ByteArrayToBase64Adapter;
 import com.stego_api.helper.GeometryHelper;
@@ -24,17 +21,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-//import com.github.filosganga.geogson.model.Feature;
-//import com.github.filosganga.geogson.model.FeatureCollection;
-//import com.github.filosganga.geogson.model.Polygon;
-//import com.github.filosganga.geogson.model.positions.AreaPositions;
-
-//import com.github.filosganga.geogson.gson.utils.FeatureUtils;
-
-
-//import org.apache.tomcat.util.json.JSONParser;
-//import org.h2.util.json.JSONObject;
-
 @RestController
 public class SteganographicController {
 
@@ -47,55 +33,39 @@ public class SteganographicController {
     @PostMapping(value = "/embedMessage", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public String embedValues(@RequestBody String body) throws NoSuchAlgorithmException {
         System.out.println("post request from asp, date: " + new Date().toString());
-        // Get Json instance contains file content, owner and map ID
+        // Get Json instance contains file content and owner
         Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
         StegoDTO responseModel = customGson.fromJson(body, StegoDTO.class);
 
         FeatureCollection featureCollection = FeatureCollection.fromJson(responseModel.fileContent);
-
         int featureCount = featureCollection.features().size();
-
-        List<int[]> coefficientsList = new ArrayList<>();
-        // Get hash of attributes: map ID and map owner
-        String mainAttrHash = HashUtil.getHash(responseModel.id + responseModel.owner);
+        // Get hash of attributes: map owner
+        String mainAttrHash = HashUtil.getHash(responseModel.owner);
         // Get numbers of edges based on main attributes hash
         int[] edgesByHash = GeometryHelper.getEdgesByHash(mainAttrHash);
 
-        // todo delete
-        edgesByHash[29] = 267;
-        edgesByHash[30] = 269;
-
-        boolean result = false;
         int polygonIndex = 0;
+        List<int[]> coefficientsList = new ArrayList<>();
 
         for (int i = 0; i < featureCount; i++) {
             Feature currentFeature = featureCollection.features().get(i);
-
-            if (currentFeature.geometry().type().equals(GeometryHelper.typePolygon)) {
-
-                // todo to delete
-                Polygon polygon = (Polygon) currentFeature.geometry();
-                List<Point> coordinates = polygon.coordinates().get(0);
-
-                if (polygonIndex == 0) {
-                    coefficientsList.add(GeometryHelper.embedToPolygon(currentFeature, true, edgesByHash, null));
-                    result = GeometryHelper.checkEmbedInfoInFirstPolygon(coordinates, coefficientsList.get(polygonIndex));
-                } else {
-                    coefficientsList.add(GeometryHelper.embedToPolygon(currentFeature, false, edgesByHash, coefficientsList.get(polygonIndex - 1)));
-                    result = GeometryHelper.checkEmbedInfo(coordinates, coefficientsList.get(polygonIndex - 1), coefficientsList.get(polygonIndex), edgesByHash);
+            // Algorithm processes only polygons
+            // MultiPolygon
+            if (currentFeature.geometry().type().equals(GeometryHelper.multiPolygonType)) {
+                MultiPolygon multiPolygon = (MultiPolygon) currentFeature.geometry();
+                for (Polygon polygon : multiPolygon.polygons()) {
+                    coefficientsList.add(GeometryHelper.embedToPolygon(polygon, polygonIndex, currentFeature.properties(), edgesByHash, coefficientsList));
+                    ++polygonIndex;
                 }
+            }
+            // Polygon
+            if (currentFeature.geometry().type().equals(GeometryHelper.polygonType)) {
+                Polygon polygon = (Polygon) currentFeature.geometry();
+                coefficientsList.add(GeometryHelper.embedToPolygon(polygon, polygonIndex, currentFeature.properties(), edgesByHash, coefficientsList));
                 ++polygonIndex;
             }
         }
-        // Standard Mapbox .toJson loses precision that why new parser was written.
-        // Due to some fucking limitations of Matcher that should work with long text but it don't ( :)) )
-        // we replace 'long' coordinates to Json from beginning and ending. Fuck time limits!1!!
-        // It works.
-
-        String firstPart = JsonSerializationHelper.replaceCoordinatesInJSON(featureCollection.toJson(), featureCollection.toString());
-        String secondPart = JsonSerializationHelper.replaceCoordinatesInJSON(new StringBuilder(firstPart).reverse().toString(), new StringBuilder(featureCollection.toString()).reverse().toString());
-        return new StringBuilder(secondPart).reverse().toString();
-        //return JsonSerializationHelper.replaceCoordinatesInJSON(featureCollection.toJson(), featureCollection.toString());
+        return JsonSerializationHelper.toGeoJSON(featureCollection);
     }
 
 
@@ -111,18 +81,19 @@ public class SteganographicController {
 
         List<int[]> coefficientsList = new ArrayList<>();
         // Get hash of attributes: map ID and map owner
-        String mainAttrHash = HashUtil.getHash(responseModel.id + responseModel.owner);
+        //String mainAttrHash = HashUtil.getHash(responseModel.id + responseModel.owner);
+        String mainAttrHash = HashUtil.getHash(responseModel.owner);
         // Get numbers of edges based on main attributes hash
         int[] edgesByHash = GeometryHelper.getEdgesByHash(mainAttrHash);
         // todo delete
-        edgesByHash[29] = 267;
-        edgesByHash[30] = 269;
+//        edgesByHash[29] = 267;
+//        edgesByHash[30] = 269;
 
         int polygonIndex = 0;
 
         for (int i = 0; i < featureCount; i++) {
             Feature currentFeature = featureCollection.features().get(i);
-            if (currentFeature.geometry().type().equals(GeometryHelper.typePolygon)) {
+            if (currentFeature.geometry().type().equals(GeometryHelper.polygonType)) {
                 Polygon polygon = (Polygon) currentFeature.geometry();
                 List<Point> coordinates = polygon.coordinates().get(0);
                 // Get coefficients by property hash that should be embed
@@ -133,12 +104,12 @@ public class SteganographicController {
                     if (!GeometryHelper.checkEmbedInfoInFirstPolygon(coordinates, coefficientsList.get(polygonIndex))) {
                         return false;
                     }
-                    ;
+
                 } else {
                     if (!GeometryHelper.checkEmbedInfo(coordinates, coefficientsList.get(polygonIndex - 1), coefficientsList.get(polygonIndex), edgesByHash)) {
                         return false;
                     }
-                    ;
+
                 }
                 polygonIndex++;
             }
