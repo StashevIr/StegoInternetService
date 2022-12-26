@@ -1,5 +1,6 @@
 package com.stego_api.stego;
 
+
 public class StegoMapHelper {
     public String embed ( String content , String message ) {
         Integer[][] map = new Integer[12][12];
